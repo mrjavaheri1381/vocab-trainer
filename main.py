@@ -58,7 +58,10 @@ class WordEntry(Base):
 
     
 # SQLite setup
-SETUP_URL = "postgresql://postgres:0025422537Mm%40@db.vqlgotsgopxyyftmthjr.supabase.co:5432/postgres?sslmode=require"
+SETUP_URL = (
+    "postgresql://postgres.vqlgotsgopxyyftmthjr:0025422537Mm%40@"
+    "aws-1-eu-north-1.pooler.supabase.com:6543/postgres?sslmode=require"
+)
 engine = create_engine(SETUP_URL)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
