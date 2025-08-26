@@ -4,3 +4,4 @@ datetime
 pandas
 bs4
 uvicorn
+requests
