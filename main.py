@@ -259,7 +259,7 @@ async def add_word(request: Request, word=Query(...)):
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
-    # print("Received:", data)  
+    print("Received:", data)  
 
     message = data.get("message", {})
     text = message.get("text", "")
