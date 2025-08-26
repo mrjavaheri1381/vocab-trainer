@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Word</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+
+  <!-- Notification -->
+  <div id="notif" class="fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-semibold hidden z-50"></div>
+
+  <div class="bg-gray-800 p-10 rounded-2xl shadow-2xl w-full max-w-xl text-center space-y-6">
+
+    <h2 class="text-2xl font-bold text-blue-400">Add a New Word</h2>
+
+    <form method="POST" action="/add-word" class="space-y-4">
+      <input type="text"
+             name="word"
+             placeholder="Enter word"
+             required
+             class="w-full px-4 py-3 rounded-lg text-black text-xl text-center"
+             autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off"/>
+
+      <div class="flex justify-center pt-2">
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold text-lg shadow-md transition-all">
+          Add Word
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const stat = {{ stat | default(0) }};
+    const notif = document.getElementById("notif");
+
+    if (stat === 1) {
+      notif.textContent = "Word added successfully!";
+      notif.classList.remove("bg-red-600");
+      notif.classList.add("bg-green-600");
+      notif.classList.remove("hidden");
+    } else if (stat === 2) {
+      notif.textContent = "This word already exists!";
+      notif.classList.remove("bg-green-600");
+      notif.classList.add("bg-red-600");
+      notif.classList.remove("hidden");
+    }
+
+    if (stat !== 0) {
+      setTimeout(() => {
+        notif.classList.add("hidden");
+      }, 4000);
+    }
+  </script>
+
+</body>
+</html>

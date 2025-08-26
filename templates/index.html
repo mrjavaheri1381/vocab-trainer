@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Word Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="bg-gray-900 text-white flex items-center justify-center min-h-screen"
+  >
+    <div
+      class="bg-gray-800 p-10 rounded-2xl shadow-2xl w-full max-w-2xl text-center space-y-6"
+    >
+      {% if review %}
+      <h2 class="text-6xl font-bold text-yellow-400">Review</h2>
+      {% else %}
+      <h2 class="text-2xl font-bold">{{today_count }}</h2>
+      {% endif %}
+      <h2 class="text-2xl font-bold text-blue-400 shadow-md">Definition</h2>
+      <p class="text-lg text-gray-300">{{ word_entry.definition }}</p>
+      <button
+        type="button"
+        onclick="speakWord('{{ word_entry.word }}')"
+        class="pronounce-btn"
+      >
+        🔊
+      </button>
+
+      {% if word_entry.example1 %}
+      <p class="italic text-gray-400">Example 1: {{ word_entry.example1 }}</p>
+      {% endif %} {% if word_entry.example2 %}
+      <p class="italic text-gray-400">Example 2: {{ word_entry.example2 }}</p>
+      {% endif %} {% if error %}
+      <p class="text-red-400 font-semibold">{{ error }}</p>
+      {% endif %}
+      <button
+        onclick="showWord()"
+        class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-full font-bold shadow-md transition-all"
+      >
+        Show the word
+      </button>
+
+      <p id="partial-word" class="text-2xl font-bold text-green-400 mt-4"></p>
+
+      {% if not show_rating %}
+      <form method="post">
+        <input type="hidden" name="word_id" value="{{ word_entry.id }}" />
+        <input type="hidden" name="review" value="{{ review }}" />
+        <input
+          type="text"
+          name="user_input"
+          autofocus
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          class="mt-4 text-center text-2xl w-full p-3 rounded-lg text-black"
+          placeholder="Type the word..."
+        />
+        <button
+          type="submit"
+          class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition-all"
+        >
+          Submit
+        </button>
+      </form>
+      {% else %}
+      <p class="italic text-gray-400">{{ word_entry.word }}</p>
+      <form
+        method="post"
+        action="/rate"
+        class="flex flex-wrap justify-center gap-4"
+      >
+        <input type="hidden" name="word_id" value="{{ word_entry.id }}" />
+        <input type="hidden" name="review" value="{{ review }}" /> {% for i in
+        range(5) %}
+        <button
+          name="rating"
+          value="{{ i }}"
+          class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl shadow-md text-lg font-semibold"
+        >
+          {{ i }}
+        </button>
+        {% endfor %}
+        <button
+          name="rating"
+          value="-1"
+          class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl shadow-md text-lg font-semibold"
+        >
+          Skip
+        </button>
+      </form>
+      <script>
+        document.addEventListener("keydown", (e) => {
+          if ("01234".includes(e.key)) {
+            document.querySelector(`button[name='rating'][value='${e.key}']`)?.click();
+          }
+          if (e.key.toLowerCase() === 's') {
+            document.querySelector("button[name='rating'][value='-1']")?.click();
+          }
+        });
+      </script>
+      {% endif %}
+    </div>
+  </body>
+
+  <style>
+    .pronounce-btn {
+      background-color: #4a69bd;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .pronounce-btn:hover {
+      background-color: #3b5998;
+    }
+  </style>
+  <script>
+    let revealIndex = 0;
+    const fullWord = "{{ word_entry.word }}";
+    const partialEl = document.getElementById("partial-word");
+
+    document.addEventListener("keydown", (e) => {
+      if (e.altKey) {
+        speakWord(fullWord);
+      }
+      if (e.key == "ArrowUp") {
+        revealIndex = fullWord.length;
+        partialEl.textContent = fullWord.substring(0, revealIndex);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (revealIndex < fullWord.length) {
+          revealIndex++;
+          partialEl.textContent = fullWord.substring(0, revealIndex);
+        }
+      }
+      if (e.key === "ArrowDown") {
+        revealIndex = 0
+        partialEl.textContent = fullWord.substring(0, revealIndex);
+
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (revealIndex > 0) {
+          revealIndex--;
+          partialEl.textContent = fullWord.substring(0, revealIndex);
+        }
+      }
+    });
+
+    function speakWord(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      speechSynthesis.speak(utterance);
+    }
+
+    function showWord() {
+      revealIndex = fullWord.length;
+      partialEl.textContent = fullWord.substring(0, revealIndex);
+    }
+  </script>
+</html>

@@ -1,0 +1,50 @@
+body {
+  background-color: #121212;
+  color: #f0f0f0;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 60px;
+}
+
+.card {
+  background-color: #1e1e1e;
+  border-radius: 16px;
+  padding: 40px;
+  width: 800px;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.input-word {
+  font-size: 24px;
+  padding: 12px;
+  width: 100%;
+  text-align: center;
+  background-color: #292929;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  margin-top: 20px;
+}
+
+.result {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.rating-container button {
+  margin: 10px;
+  padding: 12px 20px;
+  font-size: 20px;
+  background-color: #333;
+  color: white;
+  border-radius: 8px;
+  border: 1px solid #555;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #444;
+}
