@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from sqlalchemy import Column, Integer, String, create_engine, DateTime
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime,timedelta
 import random
@@ -42,19 +43,23 @@ templates = Jinja2Templates(directory="templates")
 
 Base = declarative_base()
 
+
+
 class WordEntry(Base):
     __tablename__ = "words"
-    id = Column(Integer, primary_key=True)
-    word = Column(String, unique=True)
+    id = Column(Integer, primary_key=True, autoincrement=True) 
+    word = Column(String, unique=True, nullable=False)
     definition = Column(String)
     example1 = Column(String)
     example2 = Column(String)
     cycle = Column(Integer, default=0)
-    last_seen = Column(DateTime, default=datetime.now)
-    last_read = Column(DateTime, default=datetime.now)
+    last_seen = Column(DateTime(timezone=True), server_default=func.now())
+    last_read = Column(DateTime(timezone=True), server_default=func.now())
+
     
 # SQLite setup
-engine = create_engine("sqlite:///words.db")
+SETUP_URL = "postgresql://postgres:0025422537Mm%40@db.vqlgotsgopxyyftmthjr.supabase.co:5432/postgres"
+engine = create_engine(SETUP_URL)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
@@ -216,13 +221,15 @@ def add_to_database(request: Request, word, definition, example1, example2):
         db.close()
         return templates.TemplateResponse("add_word.html", {"request": request, 'stat': 2})
 
+
     new_entry = WordEntry(
         word=word,
         definition=definition,
         example1=example1,
         example2=example2,
         cycle=0,
-        last_seen=db.query(WordEntry).order_by(WordEntry.last_seen).all()[-1].last_seen
+        last_seen=db.query(WordEntry).order_by(WordEntry.last_seen).all()[-1].last_seen,
+        last_read=datetime.now()  
     )
 
     db.add(new_entry)
