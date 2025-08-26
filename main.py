@@ -8,6 +8,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime,timedelta
 import random
+import bot
 import pandas as pd
 import os
 import requests
@@ -58,7 +59,7 @@ class WordEntry(Base):
 
     
 # SQLite setup
-SETUP_URL = os.getenv("DATABASE")
+SETUP_URL = os.getenv('DATABASE')
 engine = create_engine(SETUP_URL)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
@@ -73,25 +74,25 @@ def save_state():
 def load_words():
     app.state.review_detail = json.loads(open('./review.json','r').read())
     app.state.queue = []
-    session = Session()
-    if session.query(WordEntry).first() is None:
-        df = pd.read_csv("./data/words.csv")
-        for _, row in df.iterrows():
-            if pd.isna(row["Definition"]):
-                continue
-            word = row["Word"]
-            if session.query(WordEntry).filter_by(word=word).first():
-                continue
-            session.add(WordEntry(
-                word=word,
-                definition=row["Definition"],
-                example1=row.get("Example 1", ""),
-                example2=row.get("Example 2", ""),
-                cycle=0,
-                last_seen=datetime.now()
-            ))
-        session.commit()
-    session.close()
+    # session = Session()
+    # if session.query(WordEntry).first() is None:
+    #     df = pd.read_csv("./data/words.csv")
+    #     for _, row in df.iterrows():
+    #         if pd.isna(row["Definition"]):
+    #             continue
+    #         word = row["Word"]
+    #         if session.query(WordEntry).filter_by(word=word).first():
+    #             continue
+    #         session.add(WordEntry(
+    #             word=word,
+    #             definition=row["Definition"],
+    #             example1=row.get("Example 1", ""),
+    #             example2=row.get("Example 2", ""),
+    #             cycle=0,
+    #             last_seen=datetime.now()
+    #         ))
+    #     session.commit()
+    # session.close()
 
 
 def count_words_seen_today(word_id):
@@ -254,3 +255,45 @@ async def add_word(request: Request, word=Query(...)):
     add_to_database(request, word, definition, example1, example2)
     print(word,'Added!')
     
+    
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    # print("Received:", data)  
+
+    message = data.get("message", {})
+    text = message.get("text", "")
+    chat_id = message.get("chat", {}).get("id")
+
+ 
+    if text.startswith("/add_word"):
+        parts = text.split(" ", 1)
+        if len(parts) > 1:
+            word = parts[1]
+            db = Session()
+            existing = db.query(WordEntry).filter_by(word=word).first()
+            if existing:
+                db.close()
+                bot.send_message(chat_id,"The word already exists😃")
+                return {"status": "ok"}
+
+            definition, example1, example2 = get_def_ex(word)
+            new_entry = WordEntry(
+                word=word,
+                definition=definition,
+                example1=example1,
+                example2=example2,
+                cycle=0,
+                last_seen=db.query(WordEntry).order_by(WordEntry.last_seen).all()[-1].last_seen,
+                last_read=datetime.now()  
+            )
+
+            db.add(new_entry)
+            db.commit()
+            db.refresh(new_entry)
+            db.close()
+            bot.send_message(chat_id,"The word was successfully added✅")
+
+            return {"status": "ok"}
+    
+    return {"status": "ignored"}
