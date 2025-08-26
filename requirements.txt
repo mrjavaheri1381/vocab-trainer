@@ -3,3 +3,4 @@ sqlalchemy
 datetime
 pandas
 bs4
+uvicorn
