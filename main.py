@@ -102,16 +102,14 @@ def count_words_seen_today(word_id):
     today = db.query(WordEntry)\
         .filter(WordEntry.last_read >= today_start)\
         .count()
-    remaining = db.query(WordEntry)\
-        .filter(WordEntry.id > word_id)\
-        .filter(WordEntry.cycle == 0)\
-        .count()
 
     db.close()
-    return f"Today: {today}     Remaining: {remaining}"
+    return f"Today: {today}"
 
 @app.get("/", response_class=HTMLResponse)
 def show_word(request: Request):
+    params = dict(request.query_params)
+    print(params)
     review = 0
     session = Session()
     if(app.state.queue):
@@ -264,8 +262,7 @@ async def telegram_webhook(request: Request):
     message = data.get("message", {})
     text = message.get("text", "")
     chat_id = message.get("chat", {}).get("id")
-
- 
+        
     if text.startswith("/add_word"):
         parts = text.split(" ", 1)
         if len(parts) > 1:
