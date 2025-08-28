@@ -1,3 +1,4 @@
 *.ipynb
 *.sql
 words.db
+__pycache__

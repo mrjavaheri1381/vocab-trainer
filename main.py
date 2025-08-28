@@ -257,11 +257,55 @@ async def add_word(request: Request, word=Query(...)):
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
-    print("Received:", data)  
+    print("Received:", data)
+    if "callback_query" in data:
+        callback_query = data["callback_query"]
+        chat_id = callback_query.get("message", {}).get("chat", {}).get("id")
+        data_id = callback_query.get("data", "")
+
+        if data_id.startswith("word_"):
+            word_id = int(data_id.split("_")[1])
+            db = Session()
+            word_entry = db.query(WordEntry).get(word_id)
+            db.close()
+
+            if word_entry:
+                message_text = f"*{word_entry.word}*\n\n" \
+                               f"*Definition:* {word_entry.definition}\n" \
+                               f"*Example 1:* {word_entry.example1}\n" \
+                               f"*Example 2:* {word_entry.example2}"
+                bot.send_message(chat_id, message_text, parse_mode="Markdown")
+    
+        return {"status": "ok"}
 
     message = data.get("message", {})
     text = message.get("text", "")
     chat_id = message.get("chat", {}).get("id")
+        
+    if text.startswith("/today"):
+        db = Session()
+        today_start = datetime.combine(datetime.today(), datetime.min.time())
+        print(1)
+        today_words = db.query(WordEntry).filter(WordEntry.last_read >= today_start).all()
+        print(2)
+        
+        if not today_words:
+            bot.send_message(chat_id, "You haven't viewed any words today 😅")
+        else:
+            print(3)
+            # Create buttons for each word
+            buttons = [[{"text": w.word, "callback_data": f"word_{w.id}"}] for w in today_words]
+            reply_markup = {"inline_keyboard": buttons}  # plain dict, ready for JSON
+
+            bot.send_message(
+                chat_id,
+                "*Words you viewed today:*",
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+        
+        db.close()
+        return {"status": "ok"}
         
     if text.startswith("/add_word"):
         parts = text.split(" ", 1)
